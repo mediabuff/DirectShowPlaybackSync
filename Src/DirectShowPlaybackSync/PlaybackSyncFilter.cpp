@@ -1,26 +1,76 @@
 #include "stdafx.h"
 #include "PlaybackSyncFilter.h"
 
+class PlaybackSyncFilterDummyStream : public CBaseOutputPin
+{
+public:
+
+	PlaybackSyncFilterDummyStream(PlaybackSyncFilter* source, HRESULT *phr) : CBaseOutputPin(L"Dummy output", source, source->GetStateLock(), phr, L"Dummy output")
+	{
+
+	}
+
+	HRESULT CheckMediaType(const CMediaType *)
+	{
+		return E_FAIL;
+	}
+
+	// override this to set the buffer size and count. Return an error
+	// if the size/count is not to your liking.
+	// The allocator properties passed in are those requested by the
+	// input pin - use eg the alignment and prefix members if you have
+	// no preference on these.
+	HRESULT DecideBufferSize(IMemAllocator * pAlloc, __inout ALLOCATOR_PROPERTIES * ppropInputRequest)
+	{
+		return E_FAIL;
+	}
+};
 
 PlaybackSyncFilter::PlaybackSyncFilter(LPUNKNOWN lpunk, HRESULT *phr) 
 	: CBaseFilter("Sync filter", lpunk, &_stateLock, CLSID_PlaybackSyncFilter, phr)
 {
-	
+	_dummyStream = new PlaybackSyncFilterDummyStream(this, phr);
 }
 
 PlaybackSyncFilter::~PlaybackSyncFilter()
 {
-
+	delete _dummyStream;
+	_dummyStream = NULL;
 }
 
 int PlaybackSyncFilter::GetPinCount()
 {
-	return  0;
+	return  1;
 }
 
 CBasePin *PlaybackSyncFilter::GetPin(int n)
 {
+	if (n == 0)
+		return _dummyStream;
+
 	return NULL;
+}
+
+CCritSec* PlaybackSyncFilter::GetStateLock()
+{
+	return &_stateLock;
+}
+
+HRESULT PlaybackSyncFilter::GetStartReferenceTime(REFERENCE_TIME* time)
+{
+	*time = m_tStart;
+	return S_OK;
+}
+
+HRESULT PlaybackSyncFilter::NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv)
+{
+	if (riid == IID_IPlaybackSync)
+	{
+		*ppv = this;
+		return S_OK;
+	}
+
+	return CBaseFilter::NonDelegatingQueryInterface(riid, ppv);
 }
 
 CUnknown * WINAPI PlaybackSyncFilter::CreateInstance(LPUNKNOWN lpunk, HRESULT *phr)

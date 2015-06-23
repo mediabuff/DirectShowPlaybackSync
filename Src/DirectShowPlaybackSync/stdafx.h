@@ -16,7 +16,3 @@
 
 #include <atlbase.h>
 #include <atlstr.h>
-#include <initguid.h>
-
-// 478b2211-7007-4736-bd37-d9e7a890e946
-DEFINE_GUID(CLSID_PlaybackSyncFilter, 0x478b2211, 0x7007, 0x4736, 0xbd, 0x37, 0xd9, 0xe7, 0xa8, 0x90, 0xe9, 0x46);
