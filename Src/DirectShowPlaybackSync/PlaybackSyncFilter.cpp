@@ -27,9 +27,10 @@ public:
 };
 
 PlaybackSyncFilter::PlaybackSyncFilter(LPUNKNOWN lpunk, HRESULT *phr) 
-	: CBaseFilter("Sync filter", lpunk, &_stateLock, CLSID_PlaybackSyncFilter, phr)
+	: CBaseFilter("Sync filter", lpunk, &_stateLock, CLSID_PlaybackSyncFilter, phr), _clock(L"Sync filter clock", lpunk, phr)
 {
 	_dummyStream = new PlaybackSyncFilterDummyStream(this, phr);
+	_clock.AddRef();
 }
 
 PlaybackSyncFilter::~PlaybackSyncFilter()
@@ -66,10 +67,14 @@ HRESULT PlaybackSyncFilter::NonDelegatingQueryInterface(REFIID riid, __deref_out
 {
 	if (riid == IID_IPlaybackSync)
 	{
-		*ppv = this;
-		return S_OK;
+		return GetInterface(static_cast<IPlaybackSync*>(this), ppv);
 	}
 
+	if (riid == IID_IPersist || riid == IID_IAMClockAdjust || riid == IID_IReferenceClock || riid == IID_IReferenceClockTimerControl)
+	{
+		return _clock.QueryInterface(riid, ppv);
+	}
+	
 	return CBaseFilter::NonDelegatingQueryInterface(riid, ppv);
 }
 

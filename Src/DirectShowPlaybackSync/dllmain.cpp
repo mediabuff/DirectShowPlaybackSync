@@ -16,9 +16,6 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 
 STDAPI DllRegisterServer()
 {
-	while (!IsDebuggerPresent())
-		Sleep(1000);
-	DebugBreak();
 	return AMovieDllRegisterServer2(TRUE);
 }
 

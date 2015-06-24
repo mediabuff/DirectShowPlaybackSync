@@ -5,12 +5,20 @@
 
 class PlaybackSyncFilterDummyStream;
 
-class PlaybackSyncFilter : public CBaseFilter, public IPlaybackSync
+class PlaybackReferenceClock : public CSystemClock
+{
+public:
+	PlaybackReferenceClock(LPCTSTR pName, LPUNKNOWN pUnk, HRESULT *phr) : CSystemClock(pName, pUnk, phr) { }
+};
+
+class PlaybackSyncFilter : public CBaseFilter, IPlaybackSync
 {
 public:
 
 	PlaybackSyncFilter(LPUNKNOWN lpunk, HRESULT *phr);
 	~PlaybackSyncFilter();
+
+	DECLARE_IUNKNOWN
 
 	int GetPinCount();
 	CBasePin *GetPin(int n);
@@ -18,8 +26,6 @@ public:
 	CCritSec * GetStateLock();
 
 	STDMETHOD(GetStartReferenceTime)(REFERENCE_TIME* time);
-
-	DECLARE_IUNKNOWN
 
 	STDMETHOD(NonDelegatingQueryInterface)(REFIID riid, __deref_out void **ppv);
 
@@ -29,6 +35,7 @@ private:
 
 	CCritSec _stateLock;
 	PlaybackSyncFilterDummyStream* _dummyStream;
+	PlaybackReferenceClock _clock;
 
 };
 
